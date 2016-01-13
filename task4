@@ -1,0 +1,118 @@
+#!/bin/bash
+# Arvin Wiyono - 24282588
+# This script does:
+# 1. Encode all files in the directory and put the encoded results in the 'encoded' folder
+# 2. Compress all files in the 'encoded' folder and put the results in the 'compressed' folder
+# 3. Decode all files in the 'encoded' folder, and put the results in the 'decoded folder'
+# 4. Compare the decoded files with the original one and echo the report
+
+
+
+#if command line is a directory
+if [ "$#" -eq 1 ]; then
+	if [ -d $1 ]; then
+		
+		
+		echo "directory is successfully found!"
+		
+		#make a new directory for encoded files
+		encode_dir="encoded"
+		mkdir "$encode_dir"
+		
+		#initialize counter
+		counter=1 
+		
+		#for each file in the given directory
+		for file in "$1"/*
+		do
+			if [ -f $file ]; then
+				echo "currently encoding: $file"
+				#declare an output name
+				outputencode="encoded$counter"
+			
+				#encode each $file
+				./Task1/adaptive_re-rank -swap_next < $file > $encode_dir/$outputencode
+			
+				#increase counter
+				counter=$((counter+1))
+			else
+				echo "$file is not a file!"
+			fi
+		done
+		
+		echo ""
+		
+		#make a new directory for storing compressed files
+		compressed_dir="compressed"
+		mkdir $compressed_dir
+		
+		counter=1
+		
+		#for each file in the given directory
+		for file in "$encode_dir"/*
+		do
+			#declare an output name
+			outputcompressed="compressed$counter"
+			
+			echo "currently compressing: $file"
+			
+			#compress each file and put it in the compressed directory
+			./rice_coder < $file > $compressed_dir/$outputcompressed
+			
+			#increase counter
+			counter=$((counter+1))
+		done
+		
+		echo ""
+		
+		#make a new directory for storing compressed files
+		decoded_dir="decoded"
+		mkdir $decoded_dir
+		
+		counter=1
+		
+		#for each file in the given directory
+		for file in "$encode_dir"/*
+		do
+			echo "currently decoding: $file"
+			#declare an output name
+			outputdecoded="decoded$counter"
+					
+			#compress each file and put it in the compressed directory
+			./Task1/adaptive_de-rank -swap_next < $file > $decoded_dir/$outputdecoded
+			
+			#increase counter
+			counter=$((counter+1))
+		done
+		
+		echo ""
+		
+		#COMPARE AND MAKE REPORT
+		counter=1
+		
+		#for each file in the given directory
+		for file in "$1"/*
+		do
+			if [ -f $file ]; then
+				decoded="decoded$counter"
+				result=`diff $file $decoded_dir/$decoded`
+			
+				if [ "$result"="" ]; then
+					echo "file $file can be successfully encoded and decoded"
+				else
+					echo "file $file cannot be encoded and decoded"
+				fi
+			
+				#increase counter
+				counter=$((counter+1))
+			fi
+		done
+		
+	else
+		echo "ERROR: Command line argument is not a directory!"
+	fi
+else
+	echo "COMMAND: ./task4 path_to_directory"
+	
+fi
+
